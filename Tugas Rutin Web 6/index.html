@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Interactive Quiz App</title>
+
+    <style>
+        /* =========================
+           RESET
+        ========================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0b1020;
+            --card: #151c30;
+            --card-soft: #1c2540;
+            --text: #f4f7ff;
+            --muted: #9ba7c2;
+            --primary: #ff1688;
+            --primary-dark: #c90068;
+            --cyan: #16d9ff;
+            --green: #22d889;
+            --red: #ff4d6d;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --card-soft: #eef1f8;
+            --text: #1c2233;
+            --muted: #65708a;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: 0.3s ease;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        /* =========================
+           NAVBAR
+        ========================== */
+
+        .navbar {
+            width: 100%;
+            padding: 18px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--card);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            border: 1px solid var(--border);
+            background: var(--card-soft);
+            color: var(--text);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* =========================
+           CONTAINER
+        ========================== */
+
+        .container {
+            width: 90%;
+            max-width: 850px;
+            margin: 45px auto;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* =========================
+           START SCREEN
+        ========================== */
+
+        .hero {
+            text-align: center;
+            padding: 50px 25px;
+        }
+
+        .hero-icon {
+            font-size: 70px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(35px, 7vw, 60px);
+            margin-bottom: 15px;
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.7;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .info-box strong {
+            display: block;
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .info-box span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* =========================
+           BUTTON
+        ========================== */
+
+        .primary-btn {
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 22, 136, 0.3);
+        }
+
+        .secondary-btn {
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            padding: 13px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        /* =========================
+           QUIZ
+        ========================== */
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 20px;
+        }
+
+        .question-number {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .timer {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 9px 15px;
+            border-radius: 20px;
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 9px;
+            background: var(--card-soft);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--cyan));
+            transition: width 0.3s ease;
+        }
+
+        .quiz-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .category {
+            display: inline-block;
+            color: var(--cyan);
+            background: rgba(22, 217, 255, 0.1);
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: clamp(22px, 4vw, 32px);
+            line-height: 1.4;
+            margin-bottom: 25px;
+        }
+
+        .options {
+            display: grid;
+            gap: 13px;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 17px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card-soft);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 216, 137, 0.15);
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .option-btn.wrong {
+            background: rgba(255, 77, 109, 0.15);
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .option-btn.disabled {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .feedback {
+            min-height: 30px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .feedback.correct-text {
+            color: var(--green);
+        }
+
+        .feedback.wrong-text {
+            color: var(--red);
+        }
+
+        .next-area {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* =========================
+           RESULT
+        ========================== */
+
+        .result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 45px 30px;
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 65px;
+            margin-bottom: 15px;
+        }
+
+        .result-card h2 {
+            font-size: 35px;
+            margin-bottom: 15px;
+        }
+
+        .score {
+            font-size: 65px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .result-message {
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        .high-score {
+            background: var(--card-soft);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .high-score strong {
+            color: var(--cyan);
+        }
+
+        .result-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* =========================
+           HISTORY
+        ========================== */
+
+        .history-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 25px;
+        }
+
+        .history-card h3 {
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            list-style: none;
+            display: grid;
+            gap: 10px;
+        }
+
+        .history-list li {
+            display: flex;
+            justify-content: space-between;
+            background: var(--card-soft);
+            padding: 13px;
+            border-radius: 10px;
+            color: var(--muted);
+        }
+
+        /* =========================
+           MOBILE
+        ========================== */
+
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 15px 5%;
+            }
+
+            .container {
+                width: 94%;
+                margin: 25px auto;
+            }
+
+            .hero {
+                padding: 35px 15px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quiz-card {
+                padding: 22px;
+            }
+
+            .quiz-header {
+                align-items: flex-start;
+            }
+
+            .question {
+                font-size: 23px;
+            }
+
+            .option-btn {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            QuizApp
+        </div>
+
+        <div class="nav-actions">
+            <button
+                class="icon-btn"
+                id="themeBtn"
+                type="button"
+                aria-label="Ubah tema">
+                🌙
+            </button>
+        </div>
+
+    </nav>
+
+
+    <main class="container">
+
+        <!-- =========================
+             START SCREEN
+        ========================== -->
+
+        <section
+            id="startScreen"
+            class="screen active">
+
+            <div class="hero">
+
+                <div class="hero-icon">
+                    🧠
+                </div>
+
+                <h1>
+                    Interactive
+                    <span>Quiz</span>
+                </h1>
+
+                <p>
+                    Uji pengetahuanmu melalui kuis interaktif.
+                    Jawab setiap pertanyaan dengan benar dan
+                    dapatkan skor terbaikmu!
+                </p>
+
+                <div class="info-grid">
+
+                    <div class="info-box">
+                        <strong>5</strong>
+                        <span>Jumlah Soal</span>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>10s</strong>
+                        <span>Timer / Soal</span>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>100</strong>
+                        <span>Skor Maksimal</span>
+                    </div>
+
+                </div>
+
+                <button
+                    id="startBtn"
+                    class="primary-btn"
+                    type="button">
+
+                    Mulai Quiz 🚀
+
+                </button>
+
+            </div>
+
+            <div class="history-card">
+
+                <h3>
+                    🏆 High Score
+                </h3>
+
+                <p id="startHighScore">
+                    Belum ada high score.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             QUIZ SCREEN
+        ========================== -->
+
+        <section
+            id="quizScreen"
+            class="screen">
+
+            <div class="quiz-header">
+
+                <div class="question-number">
+                    Soal
+                    <span id="currentQuestion">1</span>
+                    dari
+                    <span id="totalQuestion">5</span>
+                </div>
+
+                <div class="timer">
+                    ⏱️
+                    <span id="timer">10</span>
+                    detik
+                </div>
+
+            </div>
+
+
+            <div class="progress-container">
+
+                <div
+                    id="progressBar"
+                    class="progress-bar">
+                </div>
+
+            </div>
+
+
+            <div class="quiz-card">
+
+                <div
+                    id="category"
+                    class="category">
+                    Kategori
+                </div>
+
+                <h2
+                    id="question"
+                    class="question">
+                </h2>
+
+                <div
+                    id="options"
+                    class="options">
+                </div>
+
+                <div
+                    id="feedback"
+                    class="feedback">
+                </div>
+
+                <div class="next-area">
+
+                    <button
+                        id="nextBtn"
+                        class="primary-btn"
+                        type="button"
+                        disabled>
+
+                        Soal Berikutnya →
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             RESULT SCREEN
+        ========================== -->
+
+        <section
+            id="resultScreen"
+            class="screen">
+
+            <div class="result-card">
+
+                <div class="result-icon">
+                    🎉
+                </div>
+
+                <h2>
+                    Quiz Selesai!
+                </h2>
+
+                <p>
+                    Skor kamu:
+                </p>
+
+                <div
+                    id="finalScore"
+                    class="score">
+                    0
+                </div>
+
+                <p
+                    id="resultMessage"
+                    class="result-message">
+                </p>
+
+                <div class="high-score">
+
+                    🏆 High Score:
+                    <strong id="finalHighScore">
+                        0
+                    </strong>
+
+                </div>
+
+                <div class="result-actions">
+
+                    <button
+                        id="restartBtn"
+                        class="primary-btn"
+                        type="button">
+
+                        🔄 Main Lagi
+
+                    </button>
+
+                    <button
+                        id="homeBtn"
+                        class="secondary-btn"
+                        type="button">
+
+                        🏠 Kembali
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="history-card">
+
+                <h3>
+                    📊 Riwayat Skor
+                </h3>
+
+                <ul
+                    id="historyList"
+                    class="history-list">
+                </ul>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+        /* =====================================================
+           DATA SOAL
+        ====================================================== */
+
+        const questions = [
+            {
+                category: "HTML",
+                question: "Apa kepanjangan dari HTML?",
+                options: [
+                    "Hyper Text Markup Language",
+                    "High Text Machine Language",
+                    "Hyperlink Text Management Language",
+                    "Home Tool Markup Language"
+                ],
+                answer: 0
+            },
+
+            {
+                category: "CSS",
+                question: "Properti CSS apa yang digunakan untuk mengubah warna teks?",
+                options: [
+                    "background",
+                    "font-style",
+                    "color",
+                    "text-decoration"
+                ],
+                answer: 2
+            },
+
+            {
+                category: "JavaScript",
+                question: "Keyword apa yang digunakan untuk membuat variabel yang nilainya tidak dapat diubah?",
+                options: [
+                    "var",
+                    "let",
+                    "const",
+                    "static"
+                ],
+                answer: 2
+            },
+
+            {
+                category: "JavaScript",
+                question: "Method apa yang digunakan untuk menyimpan data ke LocalStorage?",
+                options: [
+                    "localStorage.save()",
+                    "localStorage.setItem()",
+                    "localStorage.store()",
+                    "localStorage.add()"
+                ],
+                answer: 1
+            },
+
+            {
+                category: "Web",
+                question: "Manakah yang digunakan untuk membuat halaman web menjadi responsif?",
+                options: [
+                    "Media Query",
+                    "Database",
+                    "LocalStorage",
+                    "Console"
+                ],
+                answer: 0
+            }
+        ];
+
+
+        /* =====================================================
+           STATE
+        ====================================================== */
+
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+        let timeLeft = 10;
+        let timerInterval = null;
+
+
+        /* =====================================================
+           DOM ELEMENT
+        ====================================================== */
+
+        const startScreen = document.getElementById("startScreen");
+        const quizScreen = document.getElementById("quizScreen");
+        const resultScreen = document.getElementById("resultScreen");
+
+        const startBtn = document.getElementById("startBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        const homeBtn = document.getElementById("homeBtn");
+
+        const questionElement =
+            document.getElementById("question");
+
+        const optionsElement =
+            document.getElementById("options");
+
+        const categoryElement =
+            document.getElementById("category");
+
+        const currentQuestionElement =
+            document.getElementById("currentQuestion");
+
+        const totalQuestionElement =
+            document.getElementById("totalQuestion");
+
+        const progressBar =
+            document.getElementById("progressBar");
+
+        const feedbackElement =
+            document.getElementById("feedback");
+
+        const timerElement =
+            document.getElementById("timer");
+
+        const finalScoreElement =
+            document.getElementById("finalScore");
+
+        const resultMessageElement =
+            document.getElementById("resultMessage");
+
+        const finalHighScoreElement =
+            document.getElementById("finalHighScore");
+
+        const startHighScoreElement =
+            document.getElementById("startHighScore");
+
+        const historyList =
+            document.getElementById("historyList");
+
+        const themeBtn =
+            document.getElementById("themeBtn");
+
+
+        /* =====================================================
+           LOCAL STORAGE
+        ====================================================== */
+
+        const getHighScore = () => {
+            return Number(
+                localStorage.getItem("quizHighScore") || 0
+            );
+        };
+
+
+        const saveHighScore = (newScore) => {
+
+            const oldScore = getHighScore();
+
+            if (newScore > oldScore) {
+
+                localStorage.setItem(
+                    "quizHighScore",
+                    newScore
+                );
+
+                return true;
+            }
+
+            return false;
+        };
+
+
+        const saveHistory = (newScore) => {
+
+            const history =
+                JSON.parse(
+                    localStorage.getItem("quizHistory") || "[]"
+                );
+
+            history.unshift({
+                score: newScore,
+                date: new Date().toLocaleString("id-ID")
+            });
+
+            const limitedHistory =
+                history.slice(0, 5);
+
+            localStorage.setItem(
+                "quizHistory",
+                JSON.stringify(limitedHistory)
+            );
+        };
+
+
+        /* =====================================================
+           SCREEN NAVIGATION
+        ====================================================== */
+
+        const showScreen = (screen) => {
+
+            startScreen.classList.remove("active");
+            quizScreen.classList.remove("active");
+            resultScreen.classList.remove("active");
+
+            screen.classList.add("active");
+        };
+
+
+        /* =====================================================
+           START QUIZ
+        ====================================================== */
+
+        const startQuiz = () => {
+
+            currentIndex = 0;
+            score = 0;
+            answered = false;
+
+            showScreen(quizScreen);
+
+            totalQuestionElement.textContent =
+                questions.length;
+
+            loadQuestion();
+        };
+
+
+        /* =====================================================
+           LOAD QUESTION
+        ====================================================== */
+
+        const loadQuestion = () => {
+
+            clearInterval(timerInterval);
+
+            answered = false;
+
+            nextBtn.disabled = true;
+
+            feedbackElement.textContent = "";
+            feedbackElement.className = "feedback";
+
+            const currentQuestion =
+                questions[currentIndex];
+
+            categoryElement.textContent =
+                currentQuestion.category;
+
+            questionElement.textContent =
+                currentQuestion.question;
+
+            currentQuestionElement.textContent =
+                currentIndex + 1;
+
+            const progress =
+                ((currentIndex + 1) / questions.length) * 100;
+
+            progressBar.style.width =
+                `${progress}%`;
+
+
+            /* ===============================================
+               CREATE OPTIONS DENGAN createElement
+            ================================================ */
+
+            optionsElement.replaceChildren();
+
+            currentQuestion.options.forEach(
+                (option, index) => {
+
+                    const button =
+                        document.createElement("button");
+
+                    button.type = "button";
+
+                    button.className =
+                        "option-btn";
+
+                    button.textContent =
+                        `${String.fromCharCode(65 + index)}. ${option}`;
+
+                    button.dataset.index =
+                        index;
+
+                    optionsElement.appendChild(
+                        button
+                    );
+                }
+            );
+
+
+            startTimer();
+        };
+
+
+        /* =====================================================
+           EVENT DELEGATION
+        ====================================================== */
+
+        optionsElement.addEventListener(
+            "click",
+            (event) => {
+
+                const clickedButton =
+                    event.target.closest(".option-btn");
+
+                if (!clickedButton || answered) {
+                    return;
+                }
+
+                const selectedIndex =
+                    Number(clickedButton.dataset.index);
+
+                checkAnswer(
+                    selectedIndex,
+                    clickedButton
+                );
+            }
+        );
+
+
+        /* =====================================================
+           CHECK ANSWER
+        ====================================================== */
+
+        const checkAnswer = (
+            selectedIndex,
+            clickedButton
+        ) => {
+
+            answered = true;
+
+            clearInterval(timerInterval);
+
+            const currentQuestion =
+                questions[currentIndex];
+
+            const correctIndex =
+                currentQuestion.answer;
+
+            const allOptions =
+                optionsElement.querySelectorAll(
+                    ".option-btn"
+                );
+
+            allOptions.forEach(
+                (button, index) => {
+
+                    button.classList.add("disabled");
+
+                    if (index === correctIndex) {
+                        button.classList.add("correct");
+                    }
+                }
+            );
+
+
+            if (selectedIndex === correctIndex) {
+
+                score += 20;
+
+                clickedButton.classList.add(
+                    "correct"
+                );
+
+                feedbackElement.textContent =
+                    "✓ Jawaban kamu benar! +20 poin";
+
+                feedbackElement.classList.add(
+                    "correct-text"
+                );
+
+            } else {
+
+                clickedButton.classList.add(
+                    "wrong"
+                );
+
+                feedbackElement.textContent =
+                    "✗ Jawaban kamu salah.";
+
+                feedbackElement.classList.add(
+                    "wrong-text"
+                );
+            }
+
+
+            nextBtn.disabled = false;
+
+            if (
+                currentIndex ===
+                questions.length - 1
+            ) {
+
+                nextBtn.textContent =
+                    "Lihat Hasil 🏆";
+            }
+        };
+
+
+        /* =====================================================
+           TIMER
+        ====================================================== */
+
+        const startTimer = () => {
+
+            timeLeft = 10;
+
+            timerElement.textContent =
+                timeLeft;
+
+            timerInterval =
+                setInterval(() => {
+
+                    timeLeft--;
+
+                    timerElement.textContent =
+                        timeLeft;
+
+                    if (timeLeft <= 0) {
+
+                        clearInterval(
+                            timerInterval
+                        );
+
+                        if (!answered) {
+
+                            answered = true;
+
+                            feedbackElement.textContent =
+                                "⏰ Waktu habis!";
+
+                            feedbackElement.classList.add(
+                                "wrong-text"
+                            );
+
+                            const currentQuestion =
+                                questions[currentIndex];
+
+                            const allOptions =
+                                optionsElement.querySelectorAll(
+                                    ".option-btn"
+                                );
+
+                            allOptions.forEach(
+                                (button, index) => {
+
+                                    button.classList.add(
+                                        "disabled"
+                                    );
+
+                                    if (
+                                        index ===
+                                        currentQuestion.answer
+                                    ) {
+
+                                        button.classList.add(
+                                            "correct"
+                                        );
+                                    }
+                                }
+                            );
+
+                            nextBtn.disabled =
+                                false;
+                        }
+                    }
+
+                }, 1000);
+        };
+
+
+        /* =====================================================
+           NEXT QUESTION
+        ====================================================== */
+
+        const nextQuestion = () => {
+
+            if (!answered) {
+                return;
+            }
+
+            currentIndex++;
+
+            if (
+                currentIndex <
+                questions.length
+            ) {
+
+                loadQuestion();
+
+            } else {
+
+                finishQuiz();
+            }
+        };
+
+
+        /* =====================================================
+           FINISH QUIZ
+        ====================================================== */
+
+        const finishQuiz = () => {
+
+            clearInterval(timerInterval);
+
+            const isNewHighScore =
+                saveHighScore(score);
+
+            saveHistory(score);
+
+            const highScore =
+                getHighScore();
+
+            finalScoreElement.textContent =
+                score;
+
+            finalHighScoreElement.textContent =
+                highScore;
+
+
+            if (score === 100) {
+
+                resultMessageElement.textContent =
+                    "Luar biasa! Semua jawaban kamu benar! 🎉";
+
+            } else if (score >= 60) {
+
+                resultMessageElement.textContent =
+                    "Bagus! Kamu sudah memahami materi dengan baik. 👍";
+
+            } else {
+
+                resultMessageElement.textContent =
+                    "Tetap semangat! Coba lagi untuk mendapatkan skor lebih tinggi. 💪";
+            }
+
+
+            if (isNewHighScore) {
+
+                resultMessageElement.textContent +=
+                    " 🏆 Kamu mendapatkan High Score baru!";
+            }
+
+
+            loadHistory();
+
+            showScreen(resultScreen);
+        };
+
+
+        /* =====================================================
+           LOAD HISTORY
+        ====================================================== */
+
+        const loadHistory = () => {
+
+            historyList.replaceChildren();
+
+            const history =
+                JSON.parse(
+                    localStorage.getItem("quizHistory") || "[]"
+                );
+
+            if (history.length === 0) {
+
+                const emptyItem =
+                    document.createElement("li");
+
+                emptyItem.textContent =
+                    "Belum ada riwayat.";
+
+                historyList.appendChild(
+                    emptyItem
+                );
+
+                return;
+            }
+
+
+            history.forEach((item) => {
+
+                const listItem =
+                    document.createElement("li");
+
+                const scoreText =
+                    document.createElement("span");
+
+                const dateText =
+                    document.createElement("span");
+
+                scoreText.textContent =
+                    `Skor: ${item.score}`;
+
+                dateText.textContent =
+                    item.date;
+
+                listItem.appendChild(
+                    scoreText
+                );
+
+                listItem.appendChild(
+                    dateText
+                );
+
+                historyList.appendChild(
+                    listItem
+                );
+            });
+        };
+
+
+        /* =====================================================
+           DISPLAY HIGH SCORE
+        ====================================================== */
+
+        const displayStartHighScore = () => {
+
+            const highScore =
+                getHighScore();
+
+            if (highScore > 0) {
+
+                startHighScoreElement.textContent =
+                    `High Score kamu saat ini: ${highScore}`;
+
+            } else {
+
+                startHighScoreElement.textContent =
+                    "Belum ada high score. Yuk mulai quiz!";
+            }
+        };
+
+
+        /* =====================================================
+           DARK / LIGHT MODE
+        ====================================================== */
+
+        themeBtn.addEventListener(
+            "click",
+            () => {
+
+                document.body.classList.toggle(
+                    "light-mode"
+                );
+
+                const isLight =
+                    document.body.classList.contains(
+                        "light-mode"
+                    );
+
+                themeBtn.textContent =
+                    isLight ? "☀️" : "🌙";
+
+                localStorage.setItem(
+                    "quizTheme",
+                    isLight ? "light" : "dark"
+                );
+            }
+        );
+
+
+        const loadTheme = () => {
+
+            const theme =
+                localStorage.getItem(
+                    "quizTheme"
+                );
+
+            if (theme === "light") {
+
+                document.body.classList.add(
+                    "light-mode"
+                );
+
+                themeBtn.textContent = "☀️";
+            }
+        };
+
+
+        /* =====================================================
+           EVENT BUTTON
+        ====================================================== */
+
+        startBtn.addEventListener(
+            "click",
+            startQuiz
+        );
+
+        nextBtn.addEventListener(
+            "click",
+            nextQuestion
+        );
+
+        restartBtn.addEventListener(
+            "click",
+            startQuiz
+        );
+
+        homeBtn.addEventListener(
+            "click",
+            () => {
+
+                clearInterval(
+                    timerInterval
+                );
+
+                displayStartHighScore();
+
+                showScreen(
+                    startScreen
+                );
+            }
+        );
+
+
+        /* =====================================================
+           INITIALIZATION
+        ====================================================== */
+
+        const init = () => {
+
+            loadTheme();
+
+            displayStartHighScore();
+
+            totalQuestionElement.textContent =
+                questions.length;
+        };
+
+
+        init();
+
+    </script>
+
+</body>
+</html>
